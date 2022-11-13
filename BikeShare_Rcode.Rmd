@@ -1,0 +1,111 @@
+---
+title: "Google Analytics Capstone"
+author: "Emmanuel Faderin"
+date: "`r Sys.Date()`"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r install packages}
+install.packages("tidyverse")
+install.packages("lubridate")
+install.packages("data.table")
+install.packages("skimr")
+install.packages("readr")
+install.packages("dplyr")
+install.packages("tidyr")
+install.packages("janitor")
+```
+
+```{r load libraries}
+library(tidyverse)
+library(lubridate)
+library(data.table)
+library(skimr)
+library(readr)
+library(dplyr)
+library(tidyr)
+library(janitor)
+```
+```{r set file directory}
+getwd()
+setwd("C:/Users/DELL/Documents/dataset")
+```
+
+```{r import the csv files of the data}
+m1 <- read.csv("202109-divvy-tripdata.csv")
+m2 <- read.csv("202110-divvy-tripdata.csv")
+m3 <- read.csv("202111-divvy-tripdata.csv")
+m4 <- read.csv("202112-divvy-tripdata.csv")
+m5 <- read.csv("202201-divvy-tripdata.csv")
+m6 <- read.csv("202202-divvy-tripdata.csv")
+m7 <- read.csv("202203-divvy-tripdata.csv")
+m8 <- read.csv("202204-divvy-tripdata.csv")
+m9 <- read.csv("202205-divvy-tripdata.csv")
+m10 <- read.csv("202206-divvy-tripdata.csv")
+m11 <- read.csv("202207-divvy-tripdata.csv")
+m12 <- read.csv("202208-divvy-tripdata.csv")
+```
+
+```{r combine all of the files into one dataframe}
+all_trips <- rbind(m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12)
+```
+
+
+```{r create new data frame}
+total_trips <- all_trips
+```
+
+```{r calculate the ride length by subracting the started_at time from the ended_at time in minutes}
+total_trips_v1 <- total_trips %>%
+  mutate(ride_length = difftime (ended_at, started_at, units = "mins" ))
+```
+
+```{r view the number of rows which have a ride length less than or equal to zero}
+nrow(subset(total_trips_v1, ride_length <= 0))
+```
+
+```{r remove the rows where ride length is less than or equal to zero}
+total_trips_v2 <- total_trips_v1[!(total_trips_v1$ride_length <= 0),]
+```
+
+```{r view the total number of rows}
+nrow(total_trips_v2)
+```
+
+```{r remove rows with null values}
+total_trips_v2 <- na.omit(total_trips_v2)
+```
+
+```{r remove rows with duplicate ride id}
+total_trips_v2 <- total_trips_v2 %>%
+  distinct(ride_id, .keep_all = TRUE)
+```
+```{r create a new column with the date of the started_at}
+total_trips_v2$date <- format(as.Date(total_trips_v2$started_at))
+```
+
+```{r create a new column for the days of week}
+total_trips_v2$day_of_week <- wday(total_trips_v2$started_at)
+total_trips_v2$day_of_week <- format(as.Date(total_trips_v2$date), "%A")
+
+```
+
+```{r create a new column for the months}
+total_trips_v2$month <- format(as.Date(total_trips_v2$date), "%m")
+```
+
+```{r rename some of the columns for easy understanding}
+total_trips_final <- total_trips_v2 %>%
+  rename(start_time = started_at, 
+         end_time = ended_at,
+         ride_type = rideable_type,
+         customer_type = member_casual,)
+```
+
+```{r export the final csv file}
+write.csv(total_trips_final, 'total_datasets.csv')
+```
+
